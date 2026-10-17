@@ -7,14 +7,22 @@ import { useAuth } from '../context/AuthContext.jsx';
 export const statusLabel = (s) => s.replace(/_/g, ' ').replace(/^./, (c) => c.toUpperCase());
 
 export function Account() {
+
   const { user, loading, logout, wishlist } = useAuth(); const nav = useNavigate(); const [sp] = useSearchParams();
+
   const [orders, setOrders] = useState(null); const [wl, setWl] = useState([]);
+
   const load = () => api.get('/orders/my-orders').then((r) => setOrders(r.data));
+
   useEffect(() => { if (user) load(); }, [user]);
+
   useEffect(() => { if (user && wishlist.length) api.get('/products?limit=48').then((r) => setWl(r.data.items.filter((p) => wishlist.includes(p._id)))); else setWl([]); }, [wishlist, user]);
   if (loading) return null;
+
   if (!user) return <Navigate to="/login?next=/account" />;
+
   const cancel = async (id) => { if (!confirm('Cancel this order?')) return; try { await api.post(`/orders/${id}/cancel`); toast.success('Order cancelled'); load(); } catch (e) { toast.error(errMsg(e)); } };
+  
   return (
     <div className="max-w-4xl mx-auto px-4 py-10">
       <div className="flex justify-between items-center"><div><h1 className="font-display text-3xl">Hi, {user.name}</h1><p className="text-sm text-neutral-600">{user.email}</p></div><div className="flex gap-2">{user.role === 'admin' && <Link to="/admin" className="btn-o">Admin</Link>}<button className="btn" onClick={() => { logout(); nav('/'); }}>Log out</button></div></div>
