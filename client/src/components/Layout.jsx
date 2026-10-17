@@ -181,7 +181,7 @@ export default function Layout() {
             <p className="text-neutral-400">
               support@monofit.example
               <br />
-              Mon–Sat, 10am–6pm
+             
             </p>
             {user?.role === "admin" && (
               <Link to="/admin" className="block mt-3 underline">
