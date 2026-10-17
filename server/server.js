@@ -18,6 +18,7 @@ for (const k of ["MONGODB_URI", "JWT_SECRET"])
     console.error(`Missing env var ${k}`);
     process.exit(1);
   }
+  
 const app = express();
 app.set("trust proxy", 1);
 app.use(helmet());
