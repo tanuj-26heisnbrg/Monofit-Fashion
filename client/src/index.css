@@ -1,0 +1,9 @@
+@tailwind base; @tailwind components; @tailwind utilities;
+@layer components {
+  .btn { @apply inline-flex items-center justify-center gap-2 bg-black text-white px-5 py-3 text-sm font-medium transition hover:bg-neutral-800 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black; }
+  .btn-o { @apply inline-flex items-center justify-center gap-2 border border-black px-5 py-3 text-sm font-medium transition hover:bg-black hover:text-white disabled:opacity-40; }
+  .inp { @apply w-full border border-neutral-300 px-3 py-2.5 text-sm focus:outline-none focus:border-black; }
+  .lbl { @apply block text-xs font-medium mb-1 text-neutral-700; }
+}
+body { @apply text-black bg-white font-sans antialiased; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
