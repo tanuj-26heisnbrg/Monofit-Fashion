@@ -412,6 +412,10 @@ function Categories() {
     await api.patch("/admin/categories/" + x._id, body);
     load();
   };
+
+
+
+  
   return (
     <div className="max-w-lg">
       <h1 className="font-display text-2xl mb-4">Categories</h1>
