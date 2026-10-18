@@ -105,6 +105,7 @@ export default function Layout() {
                 {l}
               </Link>
             ))}
+            
             {user?.role === "admin" && (
               <Link
                 to="/admin"
