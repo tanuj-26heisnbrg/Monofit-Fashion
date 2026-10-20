@@ -8,6 +8,8 @@ import Checkout from './pages/Checkout.jsx';
 import Auth from './pages/Auth.jsx';
 import { Account, OrderDetail } from './pages/Account.jsx';
 import Policy from './pages/Policy.jsx';
+import Contact from './pages/Contact.jsx';
+import TrackOrder from './pages/TrackOrder.jsx';
 import Admin from './admin/Admin.jsx';
 
 export default function App() {
@@ -22,6 +24,8 @@ export default function App() {
         <Route path="login" element={<Auth mode="login" />} />
         <Route path="register" element={<Auth mode="register" />} />
         <Route path="account" element={<Account />} />
+        <Route path="contact" element={<Contact />} />
+        <Route path="track-order" element={<TrackOrder />} />
         <Route path="orders/:id" element={<OrderDetail />} />
         <Route path="order-success/:id" element={<OrderDetail success />} />
         <Route path="p/:slug" element={<Policy />} />

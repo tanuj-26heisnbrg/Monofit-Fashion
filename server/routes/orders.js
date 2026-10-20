@@ -9,7 +9,6 @@ import {
   cancelOrder,
 } from "../services/orderService.js";
 const r = Router();
-r.use(protect);
 const items = z
   .array(
     z.object({
@@ -19,6 +18,53 @@ const items = z
     }),
   )
   .min(1);
+const trackLookup = z.discriminatedUnion("mode", [
+  z.object({
+    mode: z.literal("order"),
+    orderNumber: z.string().trim().min(1).max(40),
+    email: z.string().trim().email().max(254),
+  }),
+  z.object({
+    mode: z.literal("tracking"),
+    trackingId: z.string().trim().min(1).max(100),
+  }),
+]);
+const publicTrackingDetails = (order) => ({
+  orderNumber: order.orderNumber,
+  status: order.status,
+  tracking: order.tracking,
+  history: order.history,
+});
+r.post(
+  "/track",
+  wrap(async (req, res) => {
+    const lookup = trackLookup.parse(req.body);
+    let order;
+
+    if (lookup.mode === "order") {
+      order = await Order.findOne({
+        orderNumber: lookup.orderNumber,
+      }).populate("user", "email");
+      const submittedEmail = lookup.email.toLowerCase();
+      if (
+        !order ||
+        ![order.address?.email, order.user?.email]
+          .filter(Boolean)
+          .some((email) => email.toLowerCase() === submittedEmail)
+      ) {
+        throw httpError(404, "Order not found. Check the order number and email.");
+      }
+    } else {
+      order = await Order.findOne({
+        "tracking.trackingId": lookup.trackingId,
+      });
+      if (!order) throw httpError(404, "Tracking number not found.");
+    }
+
+    res.json(publicTrackingDetails(order));
+  }),
+);
+r.use(protect);
 const address = z.object({
   name: z.string().min(2),
   phone: z
