@@ -12,16 +12,22 @@ import { wrap, slugify } from "../utils/helpers.js";
 import { cancelOrder, restoreStock } from "../services/orderService.js";
 
 const r = Router();
+
 r.use(protect, adminOnly);
+
 const esc = (s) => String(s).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
 const upload = multer({
+
   storage: multer.memoryStorage(),
   limits: { fileSize: 5 * 1024 * 1024, files: 8 },
   fileFilter: (req, f, cb) =>
     ["image/jpeg", "image/png", "image/webp"].includes(f.mimetype)
       ? cb(null, true)
       : cb(httpError(400, "Only JPG, PNG or WEBP images are allowed")),
+
 });
+
 
 r.post(
   "/uploads",
@@ -47,6 +53,8 @@ r.post(
     res.status(201).json(out);
   }),
 );
+
+
 r.delete(
   "/uploads",
   wrap(async (req, res) => {
