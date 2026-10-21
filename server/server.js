@@ -37,6 +37,10 @@ app.use("/api/auth", rateLimit({ windowMs: 15 * 60 * 1000, limit: 30 }));
 app.get("/api/health", (req, res) => res.json({ ok: true }));
 app.use("/api/auth", auth);
 app.use("/api", catalog);
+app.use(
+  "/api/orders/track",
+  rateLimit({ windowMs: 15 * 60 * 1000, limit: 30 }),
+);
 app.use("/api/orders", orders);
 app.use("/api/payments", payments);
 app.use("/api/admin", admin);

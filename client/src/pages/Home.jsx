@@ -53,8 +53,9 @@ export default function Home() {
           <p className="mt-6 max-w-md text-neutral-300">
             Clean basics and wardrobe staples for men and women, priced for
             every day.
-          </p>
-          <div className="mt-8 flex flex-wrap gap-3">
+          </p>   
+          {/* men and  women  */}
+          {/* <div className="mt-8 flex flex-wrap gap-3">
             <Link
               to="/shop"
               className="inline-flex bg-white text-black px-6 py-3 text-sm font-medium hover:bg-neutral-200"
@@ -73,7 +74,17 @@ export default function Home() {
             >
               Women
             </Link>
-          </div>
+          </div> */}
+          
+       <div className="mt-8 flex flex-wrap gap-3">
+       <Link
+        to="/shop"
+         className="inline-flex bg-white text-black px-6 py-3 text-sm font-medium hover:bg-neutral-200"
+       >
+        Shop now
+       </Link>  
+       </div>
+
         </div>
       </section>
       {cats.length > 0 && (
