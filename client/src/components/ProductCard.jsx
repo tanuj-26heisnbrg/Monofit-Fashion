@@ -27,7 +27,7 @@ export default function ProductCard({ p }) {
   };
   return (
     <Link to={"/product/" + p.slug} className="group block">
-      <div className="relative aspect-[3/4] bg-neutral-100 overflow-hidden">
+      <div className="relative aspect-[3/4] bg-neutral-100 dark:bg-neutral-800 overflow-hidden">
         {p.images[0] ? (
           <img
             src={p.images[0].url}
@@ -46,14 +46,14 @@ export default function ProductCard({ p }) {
           </span>
         )}
         {out && (
-          <span className="absolute inset-x-0 bottom-0 bg-white/90 text-center text-xs py-2">
+          <span className="absolute inset-x-0 bottom-0 bg-white/90 dark:bg-neutral-900/90 text-center text-xs py-2">
             Out of stock
           </span>
         )}
         <button
           onClick={wish}
           aria-label="Wishlist"
-          className="absolute top-2 right-2 bg-white p-1.5"
+          className="absolute top-2 right-2 bg-white dark:bg-neutral-900 p-1.5"
         >
           <Heart size={16} fill={liked ? "#000" : "none"} />
         </button>
@@ -62,7 +62,7 @@ export default function ProductCard({ p }) {
       <div className="text-sm mt-1">
         <span className="font-medium">{inr(p.price)}</span>
         {p.mrp > p.price && (
-          <span className="text-neutral-500 line-through ml-2">
+          <span className="text-neutral-500 dark:text-neutral-400 line-through ml-2">
             {inr(p.mrp)}
           </span>
         )}

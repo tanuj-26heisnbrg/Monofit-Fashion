@@ -1,13 +1,15 @@
 
 import { useState } from "react";
 import { Link, Outlet, useNavigate } from "react-router-dom";
-import { Heart, Menu, Search, ShoppingBag, User, X } from "lucide-react";
+import { Heart, Menu, Moon, Search, ShoppingBag, Sun, User, X } from "lucide-react";
 import { useAuth } from "../context/AuthContext.jsx";
 import { useCart } from "../context/CartContext.jsx";
+import { useTheme } from "../context/ThemeContext.jsx";
 
 export default function Layout() {
   const { user, logout } = useAuth();
   const { count } = useCart();
+  const { theme, toggleTheme } = useTheme();
   const nav = useNavigate();
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState("");
@@ -31,7 +33,7 @@ export default function Layout() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <header className="sticky top-0 z-30 bg-white border-b border-neutral-200">
+      <header className="sticky top-0 z-30 bg-white dark:bg-neutral-950 border-b border-neutral-200 dark:border-neutral-800">
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center gap-6">
           <button
             className="lg:hidden"
@@ -65,7 +67,7 @@ export default function Layout() {
               value={q}
               onChange={(e) => setQ(e.target.value)}
               placeholder="Search clothing"
-              className="flex-1 py-2 text-sm outline-none"
+            className="flex-1 py-2 text-sm outline-none bg-transparent"
             />
             <button type="submit" aria-label="Search">
               <Search size={16} />
@@ -73,6 +75,9 @@ export default function Layout() {
           </form>
 
           <div className="flex items-center gap-4 ml-auto md:ml-0">
+            <button onClick={toggleTheme} aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"} title={theme === "dark" ? "Light mode" : "Dark mode"} className="p-1">
+              {theme === "dark" ? <Sun size={19} /> : <Moon size={19} />}
+            </button>
             <Link to={user ? "/account" : "/login"} aria-label="Account">
               <User size={20} />
             </Link>
@@ -93,7 +98,7 @@ export default function Layout() {
         </div>
 
         {open && (
-          <div className="lg:hidden border-t border-neutral-200 p-4 space-y-3 bg-white">
+          <div className="lg:hidden border-t border-neutral-200 dark:border-neutral-800 p-4 space-y-3 bg-white dark:bg-neutral-950">
             <form
               onSubmit={go}
               className="flex border border-neutral-300 px-3"
@@ -103,7 +108,7 @@ export default function Layout() {
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
                 placeholder="Search"
-                className="flex-1 py-2 text-sm outline-none"
+                className="flex-1 py-2 text-sm outline-none bg-transparent"
               />
               <button type="submit" aria-label="Search">
                 <Search size={16} />
