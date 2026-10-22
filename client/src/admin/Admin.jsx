@@ -465,7 +465,7 @@ export default function Admin() {
     return <Navigate to="/login?next=/admin" />;
   return (
     <div className="max-w-7xl mx-auto px-4 py-8 grid md:grid-cols-[180px_1fr] gap-8">
-      <nav className="flex md:flex-col gap-3 text-sm overflow-x-auto">
+      <nav className="flex md:flex-col gap-3 text-sm overflow-x-auto text-neutral-700 dark:text-neutral-300">
         {[
           ["/admin", "Dashboard"],
           ["/admin/products", "Products"],
@@ -484,7 +484,7 @@ export default function Admin() {
           </NavLink>
         ))}
       </nav>
-      <div>
+      <div className="text-neutral-900 dark:text-neutral-100">
         <Routes>
           <Route index element={<Dashboard />} />
           <Route path="products" element={<Products />} />
