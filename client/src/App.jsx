@@ -11,10 +11,12 @@ import Policy from './pages/Policy.jsx';
 import Contact from './pages/Contact.jsx';
 import TrackOrder from './pages/TrackOrder.jsx';
 import Admin from './admin/Admin.jsx';
+import AdminLogin from './admin/AdminLogin.jsx';
 
 export default function App() {
   return (
     <Routes>
+      <Route path="admin/login" element={<AdminLogin />} />
       <Route element={<Layout />}>
         <Route index element={<Home />} />
         <Route path="shop" element={<Shop />} />

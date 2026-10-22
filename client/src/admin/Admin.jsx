@@ -15,9 +15,11 @@ import { statusLabel } from "../pages/Account.jsx";
 
 function Dashboard() {
   const [d, setD] = useState(null);
+  const [error, setError] = useState("");
   useEffect(() => {
-    api.get("/admin/dashboard").then((r) => setD(r.data));
+    api.get("/admin/dashboard").then((r) => setD(r.data)).catch((e) => setError(errMsg(e)));
   }, []);
+  if (error) return <p role="alert" className="text-red-700">Could not load dashboard: {error}</p>;
   if (!d) return <p>Loading…</p>;
   const stats = [
     ["Products", d.products],
@@ -462,7 +464,7 @@ export default function Admin() {
   const { user, loading } = useAuth();
   if (loading) return null;
   if (!user || user.role !== "admin")
-    return <Navigate to="/login?next=/admin" />;
+    return <Navigate to="/admin/login" replace />;
   return (
     <div className="max-w-7xl mx-auto px-4 py-8 grid md:grid-cols-[180px_1fr] gap-8">
       <nav className="flex md:flex-col gap-3 text-sm overflow-x-auto text-neutral-700 dark:text-neutral-300">
