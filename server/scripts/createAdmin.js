@@ -3,6 +3,7 @@ import "dotenv/config";
 import mongoose from "mongoose";
 import User from "../models/User.js";
 await mongoose.connect(process.env.MONGODB_URI);
+
 const { ADMIN_NAME, ADMIN_EMAIL, ADMIN_PASSWORD } = process.env;
 if (!ADMIN_EMAIL || !ADMIN_PASSWORD || ADMIN_PASSWORD.length < 8) {
   console.error("Set ADMIN_EMAIL and ADMIN_PASSWORD (8+ chars) in .env");
