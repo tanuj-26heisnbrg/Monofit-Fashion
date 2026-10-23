@@ -8,6 +8,7 @@ const empty = {
   name: "",
   description: "",
   category: "",
+  gender: "unisex",
   sku: "",
   mrp: "",
   price: "",
@@ -58,7 +59,6 @@ export default function ProductForm() {
 
           if (p) {
             const product = { ...p };
-            delete product.gender;
 
             setF({
               ...empty,
@@ -171,6 +171,7 @@ export default function ProductForm() {
       name: f.name,
       description: f.description,
       category: f.category,
+      gender: f.gender,
       sku: f.sku,
       images: f.images.map(({ url, publicId }) => ({
         url,
@@ -264,6 +265,23 @@ export default function ProductForm() {
                 {c.name}
               </option>
             ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="lbl" htmlFor="pg">
+            For
+          </label>
+          <select
+            id="pg"
+            required
+            className="inp"
+            value={f.gender}
+            onChange={set("gender")}
+          >
+            <option value="men">Men</option>
+            <option value="women">Women</option>
+            <option value="unisex">Unisex</option>
           </select>
         </div>
 
