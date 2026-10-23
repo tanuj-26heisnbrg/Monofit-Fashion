@@ -1,3 +1,67 @@
+# MonoFit
+
+**Everyday fashion. Better prices.**
+
+MonoFit is a full-stack fashion storefront for clean basics and wardrobe staples for men and women. Customers can browse and search a product catalog, manage a cart and wishlist, check out, and follow their orders. Store admins manage products, inventory, orders, categories, and product photos from a protected admin panel.
+
+<p align="center">
+  <strong>React · Vite · Express · MongoDB · Cloudinary</strong>
+</p>
+
+---
+
+## What’s inside
+
+- Responsive storefront with product categories, featured products, new arrivals, sale items, and search.
+- Product pages with sizes, stock, colors, and product imagery.
+- Customer accounts, saved addresses, and wishlists.
+- Cart, checkout, coupon pricing, and Cash on Delivery.
+- Optional online payments through Razorpay.
+- Order history, status updates, and public order tracking.
+- Protected admin dashboard for products, categories, orders, and customers.
+- Cloudinary product image uploads, with image URLs and asset IDs stored alongside product data.
+- Light and dark themes.
+
+## Tech stack
+
+| Area | Technology |
+| --- | --- |
+| Frontend | React 18, Vite, React Router, Tailwind CSS |
+| Backend | Node.js, Express |
+| Database | MongoDB with Mongoose |
+| Authentication | JSON Web Tokens and bcrypt |
+| Product images | Cloudinary |
+| Payments | Razorpay (optional) |
+
+## Project layout
+
+```text
+monofit/
+├── client/                 # React storefront and admin interface
+│   ├── src/pages/           # Storefront pages
+│   ├── src/admin/            # Admin panel and product editor
+│   └── src/services/         # API client
+├── server/                 # Express API
+│   ├── config/               # Cloudinary configuration
+│   ├── middleware/           # Authentication and authorization
+│   ├── models/               # Mongoose models
+│   ├── routes/               # API routes
+│   ├── scripts/              # Database seed and admin bootstrap
+│   └── services/             # Order and pricing logic
+└── vercel.json             # Vercel client/API routing configuration
+```
+
+## Run locally
+
+### Requirements
+
+- Node.js 18 or later and npm
+- A MongoDB database (local or hosted)
+- A Cloudinary account for product photo uploads
+- Razorpay credentials only if you want online payments
+
+### 1. Install dependencies
+
 ```bash
 cd server
 npm install
