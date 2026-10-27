@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { Link, Outlet, useNavigate } from "react-router-dom";
-import { Heart, Menu, Moon, Search, ShoppingBag, Sun, User, X } from "lucide-react";
+import { Heart, Menu, Moon, Search, ShieldCheck, ShoppingBag, Sun, User, X } from "lucide-react";
 import { useAuth } from "../context/AuthContext.jsx";
 import { useCart } from "../context/CartContext.jsx";
 import { useTheme } from "../context/ThemeContext.jsx";
@@ -77,21 +77,22 @@ export default function Layout() {
           <div className="flex items-center gap-4 ml-auto md:ml-0">
             {user?.role === "admin" && (
               <Link to="/admin" className="btn-o !px-2 sm:!px-3 !py-2 text-xs whitespace-nowrap" aria-label="Open admin panel">
-                <span>Admin Panel</span>
+                <ShieldCheck size={15} className="sm:hidden" />
+                <span className="hidden sm:inline">Admin Panel</span>
               </Link>
             )}
             <button onClick={toggleTheme} aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"} title={theme === "dark" ? "Light mode" : "Dark mode"} className="p-1">
               {theme === "dark" ? <Sun size={19} /> : <Moon size={19} />}
             </button>
-            <Link to={user ? "/account" : "/login"} aria-label="Account">
+            <Link to={user ? "/account" : "/login"} aria-label="Account" title="Profile">
               <User size={20} />
             </Link>
 
-            <Link to="/account?tab=wishlist" aria-label="Wishlist">
+            <Link to="/account?tab=wishlist" aria-label="Wishlist" title="Wishlist">
               <Heart size={20} />
             </Link>
 
-            <Link to="/cart" aria-label="Cart" className="relative">
+            <Link to="/cart" aria-label="Cart" title="Cart" className="relative">
               <ShoppingBag size={20} />
               {count > 0 && (
                 <span className="absolute -top-2 -right-2 bg-black text-white text-[10px] w-4 h-4 rounded-full grid place-items-center">
