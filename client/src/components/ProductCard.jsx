@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Heart } from "lucide-react";
-import { inr } from "../services/api.js";
+import { errMsg, inr } from "../services/api.js";
 import { useAuth } from "../context/AuthContext.jsx";
 import toast from "react-hot-toast";
 
@@ -20,10 +20,16 @@ export default function ProductCard({ p }) {
   const { user, wishlist, toggleWish } = useAuth();
   const out = (p.totalStock ?? p.sizes.reduce((a, s) => a + s.stock, 0)) === 0;
   const liked = wishlist.includes(p._id);
-  const wish = (e) => {
+  const wish = async (e) => {
     e.preventDefault();
+    e.stopPropagation();
     if (!user) return toast("Log in to save items");
-    toggleWish(p._id);
+    try {
+      await toggleWish(p._id);
+      toast.success(liked ? "Removed from wishlist" : "Added to wishlist");
+    } catch (error) {
+      toast.error(errMsg(error));
+    }
   };
   return (
     <Link to={"/product/" + p.slug} className="group block">
@@ -53,9 +59,15 @@ export default function ProductCard({ p }) {
         <button
           onClick={wish}
           aria-label="Wishlist"
-          className="absolute top-2 right-2 bg-white dark:bg-neutral-900 p-1.5"
+          aria-pressed={liked}
+          title={liked ? "Remove from wishlist" : "Add to wishlist"}
+          className="absolute top-2 right-2 size-9 grid place-items-center bg-transparent"
         >
-          <Heart size={16} fill={liked ? "#000" : "none"} />
+          <Heart
+            size={22}
+            fill={liked ? "currentColor" : "none"}
+            className={`${liked ? "text-red-600 dark:text-white" : "text-white"} drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]`}
+          />
         </button>
       </div>
       <div className="mt-3 text-sm">{p.name}</div>

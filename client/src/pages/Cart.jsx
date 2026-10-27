@@ -59,7 +59,7 @@ export default function Cart() {
                   </button>
                 </div>
                 <button
-                  className="underline"
+                  className="inline-flex items-center rounded-full border border-neutral-300 dark:border-neutral-700 px-4 py-1.5 text-xs font-medium transition-colors hover:bg-neutral-900 hover:text-white hover:border-neutral-900 dark:hover:bg-white dark:hover:text-black dark:hover:border-white"
                   onClick={() => remove(i.productId, i.size)}
                 >
                   Remove

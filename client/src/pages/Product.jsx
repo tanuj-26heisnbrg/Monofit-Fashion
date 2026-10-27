@@ -117,7 +117,7 @@ export default function Product() {
                     setSize(s.size);
                     setQty(1);
                   }}
-                  className={`min-w-12 px-3 py-2 border text-sm ${size === s.size ? "bg-black text-white border-black" : "border-neutral-300"} disabled:opacity-30 disabled:line-through`}
+                  className={`min-w-12 px-3 py-2 border text-sm ${size === s.size ? "bg-black text-white border-black dark:bg-white dark:text-black dark:border-white" : "border-neutral-300"} disabled:opacity-30 disabled:line-through`}
                 >
                   {s.size}
                 </button>

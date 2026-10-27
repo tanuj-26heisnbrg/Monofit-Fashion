@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { z } from "zod";
 import User from "../models/User.js";
+import Product from "../models/Product.js";
 import { sign, protect, httpError } from "../middleware/auth.js";
 import { wrap } from "../utils/helpers.js";
 const r = Router();
@@ -50,6 +51,22 @@ r.get("/me", protect, (req, res) =>
     user: out(req.user),
     wishlist: req.user.wishlist,
     addresses: req.user.addresses,
+  }),
+);
+r.get(
+  "/wishlist",
+  protect,
+  wrap(async (req, res) => {
+    const products = await Product.find({
+      _id: { $in: req.user.wishlist },
+      status: "published",
+    }).populate("category", "name slug");
+    const byId = new Map(products.map((product) => [String(product._id), product]));
+    res.json(
+      req.user.wishlist
+        .map((id) => byId.get(String(id)))
+        .filter(Boolean),
+    );
   }),
 );
 r.post(

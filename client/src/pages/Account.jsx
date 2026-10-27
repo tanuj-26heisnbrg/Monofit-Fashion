@@ -5,18 +5,67 @@ import api, { errMsg, inr } from '../services/api.js';
 import { useAuth } from '../context/AuthContext.jsx';
 
 export const statusLabel = (s) => s.replace(/_/g, ' ').replace(/^./, (c) => c.toUpperCase());
+const hasStock = (p) => (p.totalStock ?? p.sizes?.reduce((sum, size) => sum + size.stock, 0) ?? 0) > 0;
+
+async function loadWishlistProducts(ids) {
+  let products = [];
+  try {
+    const { data } = await api.get('/auth/wishlist');
+    if (Array.isArray(data)) products = data;
+  } catch {
+    // Older backend instances may not have the dedicated wishlist endpoint yet.
+  }
+
+  const byId = new Map(products.map((product) => [String(product._id), product]));
+  const missingIds = ids.filter((id) => !byId.has(String(id)));
+  if (missingIds.length) {
+    const { data: firstPage } = await api.get('/products?limit=48&page=1');
+    const remainingPages = await Promise.all(
+      Array.from({ length: Math.max(0, firstPage.pages - 1) }, (_, index) =>
+        api.get(`/products?limit=48&page=${index + 2}`),
+      ),
+    );
+    const catalog = [
+      ...(firstPage.items || []),
+      ...remainingPages.flatMap((response) => response.data.items || []),
+    ];
+    for (const product of catalog) {
+      if (missingIds.includes(String(product._id))) {
+        byId.set(String(product._id), product);
+      }
+    }
+  }
+
+  return ids.map((id) => byId.get(String(id))).filter(Boolean);
+}
 
 export function Account() {
 
-  const { user, loading, logout, wishlist } = useAuth(); const nav = useNavigate(); const [sp] = useSearchParams();
+  const { user, loading, logout, wishlist, toggleWish } = useAuth(); const nav = useNavigate(); const [sp] = useSearchParams();
 
-  const [orders, setOrders] = useState(null); const [wl, setWl] = useState([]);
+  const [orders, setOrders] = useState(null); const [wl, setWl] = useState([]); const [wishlistLoading, setWishlistLoading] = useState(false); const [wishlistError, setWishlistError] = useState(false);
 
   const load = () => api.get('/orders/my-orders').then((r) => setOrders(r.data));
 
   useEffect(() => { if (user) load(); }, [user]);
 
-  useEffect(() => { if (user && wishlist.length) api.get('/products?limit=48').then((r) => setWl(r.data.items.filter((p) => wishlist.includes(p._id)))); else setWl([]); }, [wishlist, user]);
+  useEffect(() => {
+    let active = true;
+    if (!user || !wishlist.length) {
+      setWl([]);
+      setWishlistError(false);
+      setWishlistLoading(false);
+      return () => { active = false; };
+    }
+
+    setWishlistLoading(true);
+    setWishlistError(false);
+    loadWishlistProducts(wishlist)
+      .then((products) => { if (active) setWl(products); })
+      .catch(() => { if (active) { setWl([]); setWishlistError(true); } })
+      .finally(() => { if (active) setWishlistLoading(false); });
+    return () => { active = false; };
+  }, [wishlist, user]);
   if (loading) return null;
 
   if (!user) return <Navigate to="/login?next=/account" />;
@@ -26,7 +75,30 @@ export function Account() {
   return (
     <div className="max-w-4xl mx-auto px-4 py-10">
       <div className="flex justify-between items-center"><div><h1 className="font-display text-3xl">Hi, {user.name}</h1><p className="text-sm text-neutral-600">{user.email}</p></div><div className="flex gap-2">{user.role === 'admin' && <Link to="/admin" className="btn-o">Admin</Link>}<button className="btn" onClick={() => { logout(); nav('/'); }}>Log out</button></div></div>
-      {sp.get('tab') === 'wishlist' && <section className="mt-10"><h2 className="font-display text-xl mb-4">Wishlist</h2>{wl.length ? <ul className="space-y-2 text-sm">{wl.map((p) => <li key={p._id}><Link className="underline" to={'/product/' + p.slug}>{p.name}</Link> · {inr(p.price)}</li>)}</ul> : <p className="text-sm text-neutral-500">No saved items yet.</p>}</section>}
+      {sp.get('tab') === 'wishlist' && <section className="mt-10">
+        <h2 className="font-display text-xl mb-4">Wishlist</h2>
+        {wishlistLoading ? <p className="text-sm text-neutral-500">Loading saved items…</p> : wishlistError ? <p className="text-sm text-red-600 dark:text-red-400">Could not load your saved items. Please try again.</p> : wl.length ? <div className="divide-y divide-neutral-200 dark:divide-neutral-800 border-y border-neutral-200 dark:border-neutral-800">
+          {wl.map((p) => <article key={p._id} className="flex gap-4 py-4 sm:gap-6">
+            <Link to={'/product/' + p.slug} aria-label={p.name} className="w-24 h-28 sm:w-32 sm:h-36 shrink-0 bg-neutral-100 dark:bg-neutral-800 grid place-items-center overflow-hidden">
+              {p.images?.[0]?.url ? <img src={p.images[0].url} alt={p.name} loading="lazy" className="w-full h-full object-contain p-1" /> : <span className="text-xs text-neutral-500">No photo</span>}
+            </Link>
+            <div className="min-w-0 flex-1 text-sm">
+              <Link to={'/product/' + p.slug} className="font-medium hover:underline line-clamp-2">{p.name}</Link>
+              <div className="mt-2 flex flex-wrap items-baseline gap-x-2 gap-y-1">
+                <span className="font-medium">{inr(p.price)}</span>
+                {p.mrp > p.price && <><span className="text-neutral-500 dark:text-neutral-400 line-through">{inr(p.mrp)}</span><span className="text-xs text-red-600 dark:text-red-400">{p.discountPct}% off</span></>}
+              </div>
+              <p className={`mt-1 text-xs ${hasStock(p) ? 'text-green-700 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                {hasStock(p) ? 'In stock' : 'Out of stock'}
+              </p>
+              <div className="mt-3 flex flex-wrap items-center gap-4">
+                <Link to={'/product/' + p.slug} className="inline-flex items-center rounded-full border border-neutral-300 dark:border-neutral-700 px-4 py-1.5 text-xs font-medium transition-colors hover:bg-neutral-900 hover:text-white hover:border-neutral-900 dark:hover:bg-white dark:hover:text-black dark:hover:border-white">View product</Link>
+                <button type="button" className="inline-flex items-center rounded-full border border-neutral-300 dark:border-neutral-700 px-4 py-1.5 text-xs font-medium transition-colors hover:bg-neutral-900 hover:text-white hover:border-neutral-900 dark:hover:bg-white dark:hover:text-black dark:hover:border-white" onClick={() => toggleWish(p._id)}>Remove</button>
+              </div>
+            </div>
+          </article>)}
+        </div> : <p className="text-sm text-neutral-500">No saved items yet.</p>}
+      </section>}
       <section className="mt-10"><h2 className="font-display text-xl mb-4">My orders</h2>
         {!orders ? <p className="text-sm">Loading…</p> : !orders.length ? <p className="text-sm text-neutral-500">No orders yet. <Link className="underline" to="/shop">Start shopping</Link></p> :
           <div className="space-y-3">{orders.map((o) => (
