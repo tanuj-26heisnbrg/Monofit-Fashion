@@ -20,8 +20,13 @@ export default function Auth({ mode }) {
         f,
       );
       login(data);
-      toast.success(reg ? "Account created" : "Welcome back");
-      nav(sp.get("next") || "/");
+      if (!reg && data.user.role === "admin") {
+        toast.success("Welcome, you are an Admin!");
+        nav("/admin", { replace: true });
+      } else {
+        toast.success(reg ? "Account created" : "Welcome back");
+        nav(sp.get("next") || "/");
+      }
     } catch (er) {
       toast.error(errMsg(er));
       setBusy(false);
