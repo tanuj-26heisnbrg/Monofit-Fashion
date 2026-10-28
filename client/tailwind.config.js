@@ -1,1 +1,1 @@
-export default { darkMode: 'class', content: ['./index.html', './src/**/*.{js,jsx}'], theme: { extend: { fontFamily: { sans: ['"Inter"', 'system-ui', 'sans-serif'], display: ['"Archivo Black"', 'Inter', 'sans-serif'] } } }, plugins: [] };
+export default { darkMode: 'class', content: ['./index.html', './src/**/*.{js,jsx}'], theme: { extend: { fontFamily: { sans: ['Georgia', '"Times New Roman"', 'serif'], display: ['Georgia', '"Times New Roman"', 'serif'] } } }, plugins: [] };

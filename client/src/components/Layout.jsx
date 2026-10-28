@@ -161,7 +161,7 @@ export default function Layout() {
         <Outlet />
       </main>
 
-      <footer className="bg-black text-white mt-20">
+      <footer className="bg-black text-white mt-20 dark:!bg-[#171815]">
         <div className="max-w-7xl mx-auto px-4 py-12 grid gap-8 md:grid-cols-4 text-sm">
           <div>
             <div className="font-display text-xl">MonoFit</div>
