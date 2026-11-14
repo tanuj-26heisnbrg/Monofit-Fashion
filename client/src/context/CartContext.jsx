@@ -14,9 +14,9 @@ export function CartProvider({ children }) {
     () => localStorage.setItem("mf_cart", JSON.stringify(items)),
     [items],
   );
-  const add = (p, size, qty) =>
+  const add = (p, size, qty, color = "") =>
     setItems((cur) => {
-      const i = cur.find((x) => x.productId === p._id && x.size === size);
+      const i = cur.find((x) => x.productId === p._id && x.size === size && (x.color || "") === color);
       const max = p.sizes.find((s) => s.size === size)?.stock ?? 0;
       if (i)
         return cur.map((x) =>
@@ -32,21 +32,22 @@ export function CartProvider({ children }) {
           price: p.price,
           mrp: p.mrp,
           size,
+          color,
           qty: Math.min(qty, max),
           max,
         },
       ];
     });
-  const setQty = (id, size, qty) =>
+  const setQty = (id, size, color, qty) =>
     setItems((c) =>
       c.map((x) =>
-        x.productId === id && x.size === size
+        x.productId === id && x.size === size && (x.color || "") === (color || "")
           ? { ...x, qty: Math.max(1, Math.min(qty, x.max || 10)) }
           : x,
       ),
     );
-  const remove = (id, size) =>
-    setItems((c) => c.filter((x) => !(x.productId === id && x.size === size)));
+  const remove = (id, size, color) =>
+    setItems((c) => c.filter((x) => !(x.productId === id && x.size === size && (x.color || "") === (color || ""))));
   const clear = () => setItems([]);
   const count = items.reduce((a, i) => a + i.qty, 0);
   const subtotal = items.reduce((a, i) => a + i.qty * i.price, 0);

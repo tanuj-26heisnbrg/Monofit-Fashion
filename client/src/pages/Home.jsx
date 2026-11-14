@@ -29,17 +29,27 @@ const Row = ({ title, items, to, loading }) => (
   </section>
 );
 
+const popularCategoryGroups = [
+  { label: "T-Shirts", slugs: ["t-shirts", "oversized-t-shirts"] },
+  { label: "Shirts", slugs: ["shirts"] },
+  { label: "Bottoms", slugs: ["jeans-and-trousers", "bottoms"] },
+  { label: "Co-Ords", slugs: ["co-ords", "coords"] },
+  { label: "New Arrivals", to: "/shop?new=1" },
+  { label: "Accessories", slugs: ["accessories"] },
+];
+
 export default function Home() {
   const [d, setD] = useState(null);
   const [cats, setCats] = useState([]);
   useEffect(() => {
-    api.get("/products/featured").then((r) => setD(r.data)).catch(() => setD({ featured: [], newArrivals: [], bestSellers: [], sale: [] }));
+    api.get("/products/featured").then((r) => setD(r.data)).catch(() => setD({ featured: [], newArrivals: [], bestSellers: [], sale: [], hangerCollection: [] }));
     api.get("/categories").then((r) => setCats(r.data)).catch(() => {});
   }, []);
   const loading = !d;
-  const railProducts = [...(d?.newArrivals || []), ...(d?.featured || []), ...(d?.bestSellers || [])]
-    .filter((product, index, all) => product.images?.[0]?.url && all.findIndex((item) => item._id === product._id) === index)
+  const railProducts = (d?.hangerCollection || [])
+    .filter((product) => product.images?.[0]?.url)
     .slice(0, 9);
+  const categoryProducts = d?.hangerCollection || d?.newArrivals || [];
   return (
     <>
       <section className="collection-hero">
@@ -47,7 +57,7 @@ export default function Home() {
           <p className="collection-kicker">A considered wardrobe · 2025</p>
           <h1>Made for the<br /><em>everyday.</em></h1>
           <p className="collection-description">Thoughtful layers, easy silhouettes, and the colors you’ll reach for again and again.</p>
-          <Link to="/shop" className="collection-cta">Explore the collection <span aria-hidden="true">↗</span></Link>
+          <Link to="/shop?hangerCollection=1" className="collection-cta">Explore the collection <span aria-hidden="true">↗</span></Link>
         </div>
         <div className="wardrobe-scene" aria-label="A collection of clothes hanging on a rail">
           <div className="scene-caption"><span>NEW COLLECTION</span><span>THE AUTUMN EDIT — NO. 01</span></div>
@@ -59,11 +69,19 @@ export default function Home() {
         </div>
         <div className="hero-index"><span>01</span><span className="hero-index-line" /><span>04</span></div>
       </section>
-      {cats.length > 0 && <section className="max-w-7xl mx-auto px-4 mt-12 flex flex-wrap gap-2">{cats.map((c) => <Link key={c._id} to={`/shop?category=${c.slug}`} className="border border-neutral-300 px-4 py-2 text-sm hover:bg-black hover:text-white">{c.name}</Link>)}</section>}
+      <section className="popular-categories" aria-labelledby="popular-categories-title">
+        <h2 id="popular-categories-title">Popular Categories</h2>
+        <div className="popular-category-grid">{popularCategoryGroups.map((group) => {
+          const matchedCategories = cats.filter((category) => group.slugs?.includes(category.slug));
+          const product = categoryProducts.find((item) => matchedCategories.some((category) => category.slug === item.category?.slug) && item.images?.[0]?.url);
+          const to = group.to || (matchedCategories.length ? `/shop?category=${matchedCategories[0].slug}` : "/shop");
+          return <Link key={group.label} to={to} className="popular-category">{product ? <img src={product.images[0].url} alt="" loading="lazy" /> : <span className="popular-category-mark" aria-hidden="true">{group.label === "New Arrivals" ? "✦" : group.label.slice(0, 1)}</span>}<span>{group.label}</span></Link>;
+        })}</div>
+      </section>
       <Row title="New arrivals" items={d?.newArrivals || []} to="/shop?new=1" loading={loading} />
-      <Row title="Best sellers" items={d?.bestSellers || []} to="/shop?sort=best" loading={loading} />
-      <Row title="Featured" items={d?.featured || []} to="/shop" loading={loading} />
-      <Row title="On sale" items={d?.sale || []} to="/shop?minDiscount=20" loading={loading} />
+      <Row title="Best sellers" items={d?.bestSellers || []} to="/shop?bestSeller=1" loading={loading} />
+      <Row title="Featured" items={d?.featured || []} to="/shop?featured=1" loading={loading} />
+      <Row title="On sale" items={d?.sale || []} to="/shop?onSale=1" loading={loading} />
     </>
   );
 }

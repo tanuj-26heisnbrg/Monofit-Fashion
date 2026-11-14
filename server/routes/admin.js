@@ -129,8 +129,17 @@ const prod = z.object({
   tags: z.array(z.string()).default([]),
   featured: z.boolean().default(false),
   newArrival: z.boolean().default(false),
+  bestSeller: z.boolean().default(false),
+  onSale: z.boolean().default(false),
+  hangerCollection: z.boolean().default(false),
   status: z.enum(["draft", "published", "archived"]).default("draft"),
 });
+
+const validateSaleDiscount = (onSale, mrp, price) => {
+  if (onSale && (mrp <= 0 || ((mrp - price) / mrp) * 100 <= 15)) {
+    throw httpError(400, "On-sale products need a discount greater than 15%.");
+  }
+};
 
 r.get(
   "/products",
@@ -149,6 +158,7 @@ r.post(
   "/products",
   wrap(async (req, res) => {
     const d = prod.parse(req.body);
+    validateSaleDiscount(d.onSale, d.mrp, d.price);
     res.status(201).json(
       await Product.create({
         ...d,
@@ -164,6 +174,7 @@ r.patch(
     const d = prod.partial().parse(req.body);
     const p = await Product.findById(req.params.id);
     if (!p) throw httpError(404, "Product not found");
+    validateSaleDiscount(d.onSale ?? p.onSale, d.mrp ?? p.mrp, d.price ?? p.price);
     if (d.images) {
       const keep = new Set(d.images.map((i) => i.publicId));
       for (const old of p.images)

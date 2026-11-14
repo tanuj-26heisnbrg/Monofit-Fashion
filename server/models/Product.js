@@ -35,6 +35,9 @@ const schema = new mongoose.Schema(
     tags: [String],
     featured: { type: Boolean, default: false },
     newArrival: { type: Boolean, default: false },
+    bestSeller: { type: Boolean, default: false },
+    onSale: { type: Boolean, default: false },
+    hangerCollection: { type: Boolean, default: false },
     status: {
       type: String,
       enum: ["draft", "published", "archived"],

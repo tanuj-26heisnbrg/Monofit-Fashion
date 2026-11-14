@@ -28,6 +28,7 @@ const schema = new mongoose.Schema(
         sku: String,
         image: String,
         size: String,
+        color: String,
         qty: Number,
         mrp: Number,
         price: Number,

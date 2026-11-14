@@ -90,12 +90,21 @@ Cloudinary credentials are available in the Cloudinary Console. Keep the API sec
 Online payments are optional. To enable them, also set:
 
 ```env
-PAYMENT_GATEWAY_KEY_ID=your-razorpay-key-id
-PAYMENT_GATEWAY_KEY_SECRET=your-razorpay-key-secret
+RAZORPAY_KEY_ID=your-razorpay-key-id
+RAZORPAY_KEY_SECRET=your-razorpay-key-secret
 PAYMENT_WEBHOOK_SECRET=your-razorpay-webhook-secret
 ```
 
 Without Razorpay credentials, Cash on Delivery remains available and online checkout is disabled.
+
+#### Configure Razorpay test mode
+
+1. In the Razorpay Dashboard, switch to **Test Mode** and create API keys. Put the Key ID and Key Secret in `server/.env` as `RAZORPAY_KEY_ID` and `RAZORPAY_KEY_SECRET`.
+2. In **Account & Settings → Webhooks**, add your API's public URL ending in `/api/payments/webhook`. Subscribe to `payment.captured` and `payment.failed`, then copy the webhook secret into `PAYMENT_WEBHOOK_SECRET`. This webhook secret is separate from the API Key Secret.
+3. Enable automatic payment capture in the Razorpay Dashboard. MonoFit confirms an online order as paid only after Razorpay reports the payment as captured.
+4. Restart the API and complete a test checkout. The order details page lets the customer retry an incomplete online payment.
+
+Keep all three values in the server environment only. Use test keys until the full checkout and webhook flow has been verified; configure live keys separately when the Razorpay account and website are ready for live payments. A webhook needs a publicly reachable API URL, so local testing can use the checkout callback while webhook delivery requires a deployed or otherwise reachable endpoint.
 
 ### 3. Start the API and storefront
 

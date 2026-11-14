@@ -23,7 +23,7 @@ export default function Cart() {
       </div>
       <div className="divide-y divide-neutral-200 border-y border-neutral-200">
         {items.map((i) => (
-          <div key={i.productId + i.size} className="flex gap-4 py-4">
+          <div key={i.productId + i.size + (i.color || "")} className="flex gap-4 py-4">
             <div className="w-20 h-28 bg-neutral-100 shrink-0">
               {i.image && (
                 <img
@@ -40,12 +40,13 @@ export default function Cart() {
               <p className="text-neutral-600">
                 Size {i.size} · {inr(i.price)}
               </p>
+              {i.color && <p className="text-neutral-600">Colour {i.color}</p>}
               <div className="flex items-center gap-3 mt-3">
                 <div className="flex items-center border border-neutral-300">
                   <button
                     className="px-3 py-1"
                     aria-label="Decrease"
-                    onClick={() => setQty(i.productId, i.size, i.qty - 1)}
+                    onClick={() => setQty(i.productId, i.size, i.color, i.qty - 1)}
                   >
                     −
                   </button>
@@ -53,14 +54,14 @@ export default function Cart() {
                   <button
                     className="px-3 py-1"
                     aria-label="Increase"
-                    onClick={() => setQty(i.productId, i.size, i.qty + 1)}
+                    onClick={() => setQty(i.productId, i.size, i.color, i.qty + 1)}
                   >
                     +
                   </button>
                 </div>
                 <button
                   className="inline-flex items-center rounded-full border border-neutral-300 dark:border-neutral-700 px-4 py-1.5 text-xs font-medium transition-colors hover:bg-neutral-900 hover:text-white hover:border-neutral-900 dark:hover:bg-white dark:hover:text-black dark:hover:border-white"
-                  onClick={() => remove(i.productId, i.size)}
+                  onClick={() => remove(i.productId, i.size, i.color)}
                 >
                   Remove
                 </button>

@@ -8,6 +8,7 @@ import {
   priceCart,
   cancelOrder,
 } from "../services/orderService.js";
+import { isRazorpayConfigured } from "../config/razorpay.js";
 const r = Router();
 const items = z
   .array(
@@ -103,7 +104,7 @@ r.post(
         idempotencyKey: z.string().max(80).optional(),
       })
       .parse(req.body);
-    if (b.method === "online" && !process.env.PAYMENT_GATEWAY_KEY_ID)
+    if (b.method === "online" && !isRazorpayConfigured())
       throw httpError(
         400,
         "Online payment is not available yet. Please choose Cash on Delivery",
