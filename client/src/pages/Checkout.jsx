@@ -2,18 +2,9 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import api, { errMsg, inr } from "../services/api.js";
+import { beginRazorpayCheckout } from "../services/razorpay.js";
 import { useAuth } from "../context/AuthContext.jsx";
 import { useCart } from "../context/CartContext.jsx";
-
-const loadRzp = () =>
-  new Promise((ok, no) => {
-    if (window.Razorpay) return ok();
-    const s = document.createElement("script");
-    s.src = "https://checkout.razorpay.com/v1/checkout.js";
-    s.onload = ok;
-    s.onerror = no;
-    document.body.appendChild(s);
-  });
 
 export default function Checkout() {
   const { user } = useAuth();
@@ -38,6 +29,7 @@ export default function Checkout() {
   const lines = items.map((i) => ({
     productId: i.productId,
     size: i.size,
+    color: i.color,
     qty: i.qty,
   }));
   const getQuote = (code) =>
@@ -92,36 +84,28 @@ export default function Checkout() {
         idempotencyKey: key.current,
       });
       if (method === "online") {
-        await loadRzp();
-        const { data: g } = await api.post("/payments/create-order", {
+        await beginRazorpayCheckout({
           orderId: order._id,
-        });
-        const rz = new window.Razorpay({
-          key: g.keyId,
-          amount: g.amount,
-          currency: g.currency,
-          order_id: g.gatewayOrderId,
-          name: "MonoFit",
           prefill: { name: a.name, contact: a.phone, email: a.email },
-          handler: async (r) => {
-            try {
-              await api.post("/payments/verify", { orderId: order._id, ...r });
-              clear();
-              nav("/order-success/" + order._id);
-            } catch (er) {
-              toast.error(errMsg(er));
-            }
+          onVerified: () => {
+            clear();
+            nav("/order-success/" + order._id);
           },
-          modal: {
-            ondismiss: () => {
-              setBusy(false);
-              toast(
-                "Payment not completed. Your order is saved; cancel it from My orders if you changed your mind.",
-              );
-            },
+          onError: (error) => {
+            toast.error(errMsg(error));
+            setBusy(false);
+          },
+          onFailure: (message) => {
+            toast.error(message);
+            setBusy(false);
+          },
+          onDismiss: () => {
+            setBusy(false);
+            toast(
+              "Payment not completed. You can retry from the order details or cancel it from My orders.",
+            );
           },
         });
-        rz.open();
         return;
       }
       clear();
@@ -216,15 +200,15 @@ export default function Checkout() {
               checked={method === "online"}
               onChange={() => setMethod("online")}
             />{" "}
-            Pay online (needs payment gateway setup)
+            Pay online (Razorpay)
           </label>
         </fieldset>
       </div>
       <aside className="border border-neutral-200 p-5 h-fit text-sm space-y-2">
         {items.map((i) => (
-          <div key={i.productId + i.size} className="flex justify-between">
+          <div key={i.productId + i.size + (i.color || "")} className="flex justify-between">
             <span>
-              {i.name} ({i.size}) × {i.qty}
+              {i.name} ({i.size}{i.color ? `, ${i.color}` : ""}) × {i.qty}
             </span>
             <span>{inr(i.price * i.qty)}</span>
           </div>

@@ -4,6 +4,7 @@ import Category from "../models/Category.js";
 import { wrap } from "../utils/helpers.js";
 import { httpError } from "../middleware/auth.js";
 const r = Router();
+const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 r.get(
   "/categories",
   wrap(async (req, res) =>
@@ -15,17 +16,54 @@ r.get(
   wrap(async (req, res) => {
     const base = { status: "published" };
     const pop = (q) => q.populate("category", "name slug").limit(8);
-    const [featured, newArrivals, bestSellers, sale] = await Promise.all([
+    const [featured, newArrivals, bestSellers, sale, hangerCollection] = await Promise.all([
       pop(Product.find({ ...base, featured: true })),
       pop(Product.find({ ...base, newArrival: true }).sort("-createdAt")),
-      pop(Product.find(base).sort("-sold")),
+      pop(Product.find({ ...base, bestSeller: true }).sort("-sold")),
       pop(
-        Product.find({ ...base, discountPct: { $gte: 20 } }).sort(
-          "-discountPct",
-        ),
+        Product.find({
+          ...base,
+          onSale: true,
+          $expr: { $lt: ["$price", { $multiply: ["$mrp", 0.85] }] },
+        }).sort("-discountPct"),
       ),
+      pop(Product.find({ ...base, hangerCollection: true })),
     ]);
-    res.json({ featured, newArrivals, bestSellers, sale });
+    res.json({ featured, newArrivals, bestSellers, sale, hangerCollection });
+  }),
+);
+r.get(
+  "/products/suggest",
+  wrap(async (req, res) => {
+    const q = String(req.query.q || "").trim().slice(0, 80);
+    if (q.length < 2) return res.json({ products: [], categories: [] });
+    const regex = new RegExp(escapeRegex(q), "i");
+    const categories = await Category.find({ active: true, name: regex })
+      .select("name slug")
+      .sort("order name")
+      .limit(4);
+    const categoryIds = categories.map((category) => category._id);
+    const products = await Product.find({
+      status: "published",
+      $or: [
+        { name: regex },
+        { tags: regex },
+        { colors: regex },
+        ...(categoryIds.length ? [{ category: { $in: categoryIds } }] : []),
+      ],
+    })
+      .select("name slug price images category")
+      .populate("category", "name slug")
+      .limit(8);
+    products.sort((a, b) => {
+      const rank = (product) => {
+        const name = product.name.toLowerCase();
+        const query = q.toLowerCase();
+        return name === query ? 0 : name.startsWith(query) ? 1 : 2;
+      };
+      return rank(a) - rank(b);
+    });
+    res.json({ products, categories });
   }),
 );
 r.get(
@@ -45,7 +83,20 @@ r.get(
     const page = Math.max(1, +req.query.page || 1),
       limit = Math.min(48, +req.query.limit || 12);
     const f = { status: "published" };
-    if (q) f.$text = { $search: String(q) };
+    if (q) {
+      const query = String(q).trim().slice(0, 100);
+      if (query) {
+        const regex = new RegExp(escapeRegex(query), "i");
+        const matchingCategories = await Category.find({ active: true, name: regex }).select("_id");
+        f.$or = [
+          { name: regex },
+          { description: regex },
+          { tags: regex },
+          { colors: regex },
+          ...(matchingCategories.length ? [{ category: { $in: matchingCategories.map((c) => c._id) } }] : []),
+        ];
+      }
+    }
     if (category) {
       const c = await Category.findOne({ slug: String(category) });
       f.category = c?._id || null;
@@ -60,6 +111,13 @@ r.get(
       };
     if (minDiscount) f.discountPct = { $gte: +minDiscount };
     if (req.query.new) f.newArrival = true;
+    if (req.query.featured) f.featured = true;
+    if (req.query.bestSeller) f.bestSeller = true;
+    if (req.query.hangerCollection) f.hangerCollection = true;
+    if (req.query.onSale) {
+      f.onSale = true;
+      f.$expr = { $lt: ["$price", { $multiply: ["$mrp", 0.85] }] };
+    }
     const sorts = {
       price_asc: "price",
       price_desc: "-price",

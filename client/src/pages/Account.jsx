@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import api, { errMsg, inr } from '../services/api.js';
+import { beginRazorpayCheckout } from '../services/razorpay.js';
 import { useAuth } from '../context/AuthContext.jsx';
 
 export const statusLabel = (s) => s.replace(/_/g, ' ').replace(/^./, (c) => c.toUpperCase());
@@ -113,17 +114,36 @@ export function Account() {
 }
 
 export function OrderDetail({ success }) {
-  const { id } = useParams(); const [o, setO] = useState(null);
+  const { id } = useParams(); const [o, setO] = useState(null); const [paying, setPaying] = useState(false);
   useEffect(() => { api.get('/orders/' + id).then((r) => setO(r.data)).catch(() => setO(false)); }, [id]);
   if (o === false) return <p className="py-20 text-center">Order not found.</p>;
   if (!o) return <p className="py-20 text-center">Loading…</p>;
+  const canRetryPayment = o.payment.method === 'online' && ['pending', 'failed'].includes(o.payment.status) && !['cancelled', 'returned'].includes(o.status);
+  const retryPayment = async () => {
+    if (paying) return;
+    setPaying(true);
+    try {
+      await beginRazorpayCheckout({
+        orderId: o._id,
+        prefill: { name: o.address.name, contact: o.address.phone, email: o.address.email || '' },
+        onVerified: (updated) => { setO(updated); setPaying(false); toast.success('Payment confirmed'); },
+        onError: (error) => { toast.error(errMsg(error)); setPaying(false); },
+        onFailure: (message) => { toast.error(message); setPaying(false); },
+        onDismiss: () => setPaying(false),
+      });
+    } catch (error) {
+      toast.error(errMsg(error));
+      setPaying(false);
+    }
+  };
   return (
     <div className="max-w-3xl mx-auto px-4 py-10 text-sm">
       {success && <div className="bg-black text-white p-6 mb-8"><h1 className="font-display text-2xl">Thank you. Your order is placed.</h1><p className="mt-1">Order number {o.orderNumber}</p></div>}
       {!success && <h1 className="font-display text-3xl mb-4">{o.orderNumber}</h1>}
       <p className="font-medium">Status: {statusLabel(o.status)} · Payment: {o.payment.method === 'cod' ? 'Cash on delivery' : 'Online'} ({o.payment.status})</p>
+      {canRetryPayment && <button type="button" className="btn mt-4" onClick={retryPayment} disabled={paying}>{paying ? 'Opening payment…' : 'Complete payment'}</button>}
       {o.tracking?.trackingId && <p className="mt-1">Courier {o.tracking.courier}: {o.tracking.url ? <a className="underline" href={o.tracking.url} target="_blank" rel="noreferrer">{o.tracking.trackingId}</a> : o.tracking.trackingId}</p>}
-      <div className="mt-6 divide-y divide-neutral-200 border-y border-neutral-200">{o.items.map((i, k) => <div key={k} className="flex justify-between py-3"><span>{i.name} ({i.size}) × {i.qty}</span><span>{inr(i.price * i.qty)}</span></div>)}</div>
+      <div className="mt-6 divide-y divide-neutral-200 border-y border-neutral-200">{o.items.map((i, k) => <div key={k} className="flex justify-between py-3"><span>{i.name} ({i.size}{i.color ? `, ${i.color}` : ""}) × {i.qty}</span><span>{inr(i.price * i.qty)}</span></div>)}</div>
       <div className="mt-4 ml-auto max-w-xs space-y-1"><div className="flex justify-between"><span>Subtotal</span><span>{inr(o.pricing.subtotal)}</span></div>{o.pricing.discount > 0 && <div className="flex justify-between"><span>Discount</span><span>−{inr(o.pricing.discount)}</span></div>}<div className="flex justify-between"><span>Shipping</span><span>{inr(o.pricing.shipping)}</span></div><div className="flex justify-between font-medium"><span>Total</span><span>{inr(o.pricing.total)}</span></div></div>
       <p className="mt-6 text-neutral-600">Ship to: {o.address.name}, {o.address.line1}, {o.address.city}, {o.address.state} {o.address.pincode}</p>
       <h2 className="font-medium mt-6 mb-2">Timeline</h2><ul className="space-y-1">{o.history.map((h, k) => <li key={k}>{new Date(h.at).toLocaleString()}: {statusLabel(h.status)}{h.note ? ` (${h.note})` : ''}</li>)}</ul>

@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import toast from "react-hot-toast";
 import api, { errMsg } from "../services/api.js";
+import { getSwatchColor, PRODUCT_COLORS } from "../utils/productColors.js";
 
 const empty = {
   name: "",
@@ -13,10 +14,13 @@ const empty = {
   mrp: "",
   price: "",
   sizesText: "S:10, M:10, L:10, XL:10",
-  colors: "",
+  colors: [],
   tags: "",
   featured: false,
   newArrival: false,
+  bestSeller: false,
+  onSale: false,
+  hangerCollection: false,
   status: "draft",
   images: [],
 };
@@ -38,12 +42,15 @@ export default function ProductForm() {
   const { id } = useParams();
   const nav = useNavigate();
   const fileRef = useRef();
+  const colorPickerRef = useRef();
 
   const [f, setF] = useState(empty);
   const [cats, setCats] = useState([]);
   const [uploading, setUploading] = useState(0);
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState([]);
+  const [colorSearch, setColorSearch] = useState("");
+  const [showColorMenu, setShowColorMenu] = useState(false);
 
   useEffect(() => {
     api
@@ -69,7 +76,9 @@ export default function ProductForm() {
               sizesText: p.sizes
                 .map((s) => `${s.size}:${s.stock}`)
                 .join(", "),
-              colors: p.colors.join(", "),
+              colors: (p.colors || []).map((savedColor) =>
+                PRODUCT_COLORS.find((color) => color.toLowerCase() === savedColor.toLowerCase()) || savedColor,
+              ),
               tags: p.tags.join(", "),
             });
           }
@@ -77,6 +86,14 @@ export default function ProductForm() {
         .catch((e) => toast.error(errMsg(e)));
     }
   }, [id]);
+
+  useEffect(() => {
+    const closeColorMenu = (event) => {
+      if (!colorPickerRef.current?.contains(event.target)) setShowColorMenu(false);
+    };
+    document.addEventListener("mousedown", closeColorMenu);
+    return () => document.removeEventListener("mousedown", closeColorMenu);
+  }, []);
 
   const set = (k) => (e) =>
     setF({
@@ -155,6 +172,10 @@ export default function ProductForm() {
     const price = +f.price;
     const sizes = parseSizes(f.sizesText);
 
+    if (f.onSale && (mrp <= 0 || ((mrp - price) / mrp) * 100 <= 15)) {
+      return toast.error("On-sale products need a discount greater than 15%. Increase the discount or turn off On sale.");
+    }
+
     if (price > mrp) {
       return toast.error("Selling price cannot be higher than MRP");
     }
@@ -180,16 +201,16 @@ export default function ProductForm() {
       mrp,
       price,
       sizes,
-      colors: f.colors
-        .split(",")
-        .map((x) => x.trim())
-        .filter(Boolean),
+      colors: f.colors,
       tags: f.tags
         .split(",")
         .map((x) => x.trim())
         .filter(Boolean),
       featured: f.featured,
       newArrival: f.newArrival,
+      bestSeller: f.bestSeller,
+      onSale: f.onSale,
+      hangerCollection: f.hangerCollection,
       status: f.status,
     };
 
@@ -214,6 +235,15 @@ export default function ProductForm() {
     +f.mrp > 0 && +f.price > 0 && +f.price <= +f.mrp
       ? Math.round(((f.mrp - f.price) / f.mrp) * 100)
       : 0;
+  const actualDiscount = +f.mrp > 0 ? ((+f.mrp - +f.price) / +f.mrp) * 100 : 0;
+  const availableColors = [...PRODUCT_COLORS, ...f.colors.filter((color) => !PRODUCT_COLORS.includes(color))];
+  const filteredColors = availableColors.filter((color) => color.toLowerCase().includes(colorSearch.trim().toLowerCase()));
+  const toggleColor = (color) => setF((current) => ({
+    ...current,
+    colors: current.colors.includes(color)
+      ? current.colors.filter((item) => item !== color)
+      : [...current.colors, color],
+  }));
 
   return (
     <form onSubmit={save} className="max-w-2xl space-y-4">
@@ -364,15 +394,46 @@ export default function ProductForm() {
 
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="lbl" htmlFor="pco">
-            Colors (comma separated)
-          </label>
-          <input
-            id="pco"
-            className="inp"
-            value={f.colors}
-            onChange={set("colors")}
-          />
+          <label className="lbl" htmlFor="pco">Colors</label>
+          <div ref={colorPickerRef} className="relative">
+            <input
+              id="pco"
+              className="inp"
+              value={colorSearch}
+              placeholder="Search and select colours"
+              autoComplete="off"
+              onFocus={() => setShowColorMenu(true)}
+              onChange={(event) => { setColorSearch(event.target.value); setShowColorMenu(true); }}
+              onKeyDown={(event) => { if (event.key === "Enter") event.preventDefault(); }}
+              aria-haspopup="listbox"
+              aria-expanded={showColorMenu}
+            />
+            {f.colors.length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {f.colors.map((color) => (
+                  <span key={color} className="inline-flex items-center gap-1.5 border border-neutral-300 dark:border-neutral-700 px-2 py-1 text-xs">
+                    <span className="size-3 rounded-full border border-black/15" style={{ background: getSwatchColor(color) }} />
+                    {color}
+                    <button type="button" className="ml-1 text-neutral-500 hover:text-red-600" aria-label={`Remove ${color}`} onClick={() => toggleColor(color)}>×</button>
+                  </span>
+                ))}
+              </div>
+            )}
+            {showColorMenu && (
+              <div className="absolute z-30 mt-1 max-h-56 w-full overflow-y-auto border border-neutral-300 bg-white p-1 shadow-lg dark:border-neutral-700 dark:bg-neutral-900" role="listbox" aria-multiselectable="true" aria-label="Available colours">
+                {filteredColors.length ? filteredColors.map((color) => {
+                  const selected = f.colors.includes(color);
+                  return (
+                    <button key={color} type="button" role="option" aria-selected={selected} onClick={() => toggleColor(color)} className="flex w-full items-center gap-2 px-2 py-1.5 text-left text-sm hover:bg-neutral-100 dark:hover:bg-neutral-800">
+                      <span className="size-4 rounded-full border border-black/15" style={{ background: getSwatchColor(color) }} />
+                      <span>{color}</span>
+                      {selected && <span className="ml-auto text-xs">Selected</span>}
+                    </button>
+                  );
+                }) : <p className="px-2 py-3 text-xs text-neutral-500">No matching colours.</p>}
+              </div>
+            )}
+          </div>
         </div>
 
         <div>
@@ -388,7 +449,7 @@ export default function ProductForm() {
         </div>
       </div>
 
-      <div className="flex gap-6 text-sm">
+      <div className="flex flex-wrap gap-x-6 gap-y-3 text-sm">
         <label className="flex gap-2">
           <input
             type="checkbox"
@@ -405,6 +466,31 @@ export default function ProductForm() {
             onChange={set("newArrival")}
           />
           New arrival
+        </label>
+
+        <label className="flex gap-2">
+          <input type="checkbox" checked={f.bestSeller} onChange={set("bestSeller")} />
+          Best seller
+        </label>
+
+        <label className="flex gap-2">
+          <input
+            type="checkbox"
+            checked={f.onSale}
+            onChange={(event) => {
+              if (event.target.checked && actualDiscount <= 15) {
+                toast.error("On-sale products need a discount greater than 15%.");
+                return;
+              }
+              setF((current) => ({ ...current, onSale: event.target.checked }));
+            }}
+          />
+          On sale (&gt;15% off)
+        </label>
+
+        <label className="flex gap-2">
+          <input type="checkbox" checked={f.hangerCollection} onChange={set("hangerCollection")} />
+          Hanger collection
         </label>
       </div>
 

@@ -69,6 +69,49 @@ input, textarea, select { color-scheme: light; }
 .dark .hero-index { color: #aaa99f; }
 .dark .hero-index span:first-child { color: #ecebe4; }
 .dark .hero-index-line { background: #706f66; }
+.popular-categories { max-width: 1740px; margin: 0 auto; padding: 34px 4% 72px; }
+.popular-categories h2 { margin: 0 0 38px; color: #403a2c; font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif; font-size: clamp(22px, 2vw, 34px); font-weight: 400; letter-spacing: .025em; line-height: 1; text-align: center; text-transform: uppercase; }
+.dark .popular-categories h2 { color: #e8e2d2; }
+.popular-category-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); border-top: 1px solid #e2e0dc; border-bottom: 1px solid #e2e0dc; }
+.dark .popular-category-grid { border-color: #45453f; }
+.popular-category { min-height: 118px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 9px; padding: 12px 8px; color: #4b4538; text-decoration: none; font-size: clamp(14px, 1.15vw, 20px); text-align: center; transition: background .2s ease; }
+.popular-category + .popular-category { border-left: 1px solid #e2e0dc; }
+.dark .popular-category { color: #e4e0d6; }
+.dark .popular-category + .popular-category { border-color: #45453f; }
+.popular-category:hover, .popular-category:focus-visible { background: #f7f6f2; }
+.dark .popular-category:hover, .dark .popular-category:focus-visible { background: #292a25; }
+.popular-category img, .popular-category-mark { width: 58px; height: 58px; object-fit: contain; }
+.popular-category-mark { display: grid; place-items: center; color: #8d8066; font-family: var(--font-display, inherit); font-size: 30px; }
+.dark .popular-category-mark { color: #c0b296; }
+@media (max-width: 760px) {
+  .popular-categories { padding: 28px 18px 38px; }
+  .popular-categories h2 { margin-bottom: 24px; }
+  .popular-category-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .popular-category:nth-child(4) { border-left: 0; }
+  .popular-category:nth-child(n+4) { border-top: 1px solid #e2e0dc; }
+  .dark .popular-category:nth-child(n+4) { border-color: #45453f; }
+  .popular-category { min-height: 105px; }
+}
+.searchbox { z-index: 40; color: inherit; }
+.searchbox-menu { position: absolute; z-index: 60; top: calc(100% + 9px); left: 0; width: max(100%, 320px); max-width: min(420px, calc(100vw - 32px)); max-height: min(70vh, 520px); overflow-y: auto; padding: 7px; border: 1px solid #e5e5e5; background: #fff; color: #171717; box-shadow: 0 14px 38px rgba(0,0,0,.16); }
+.dark .searchbox-menu { border-color: #393a35; background: #20211d; color: #f1f0e9; box-shadow: 0 14px 38px rgba(0,0,0,.5); }
+.searchbox-heading { padding: 9px 10px 5px; color: #777; font-size: 10px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; }
+.dark .searchbox-heading { color: #aaa99f; }
+.searchbox-status { padding: 13px 10px; color: #737373; font-size: 12px; }
+.dark .searchbox-status { color: #b6b6ad; }
+.searchbox-product, .searchbox-category, .searchbox-recent { display: flex; width: 100%; align-items: center; gap: 11px; padding: 8px 10px; text-align: left; font-size: 12px; }
+.searchbox-product:hover, .searchbox-category:hover, .searchbox-recent:hover, .searchbox-product.is-active, .searchbox-category.is-active { background: #f2f1ed; }
+.dark .searchbox-product:hover, .dark .searchbox-category:hover, .dark .searchbox-recent:hover, .dark .searchbox-product.is-active, .dark .searchbox-category.is-active { background: #30312b; }
+.searchbox-product img, .searchbox-no-image { width: 42px; height: 48px; flex: 0 0 42px; object-fit: cover; background: #efeee9; }
+.dark .searchbox-no-image { background: #383933; }
+.searchbox-category { min-height: 38px; }
+.searchbox-category + .searchbox-product, .searchbox-heading + .searchbox-product { border-top: 1px solid #eeeeeb; }
+.dark .searchbox-category + .searchbox-product, .dark .searchbox-heading + .searchbox-product { border-color: #393a35; }
+.searchbox-recent { color: #555; }
+.dark .searchbox-recent { color: #d0cfc7; }
+.searchbox-all { width: 100%; margin-top: 5px; border-top: 1px solid #e8e8e5; padding: 11px 10px 8px; color: #555; text-align: left; font-size: 12px; }
+.dark .searchbox-all { border-color: #393a35; color: #d0cfc7; }
+.searchbox-all:hover { text-decoration: underline; }
 @keyframes product-arrive { from { opacity: 0; translate: 0 -10px; scale: .97; } to { opacity: 1; translate: 0 0; scale: 1; } }
 @media (max-width: 760px) {
   .collection-hero { grid-template-columns: 1fr; min-height: 0; padding: 48px 22px 55px; }

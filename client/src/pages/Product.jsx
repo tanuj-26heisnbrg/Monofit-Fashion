@@ -5,6 +5,7 @@ import api, { inr } from "../services/api.js";
 import { useCart } from "../context/CartContext.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
 import ProductCard from "../components/ProductCard.jsx";
+import { getSwatchColor } from "../utils/productColors.js";
 
 export default function Product() {
   const { slug } = useParams();
@@ -13,6 +14,7 @@ export default function Product() {
   const [d, setD] = useState(null);
   const [img, setImg] = useState(0);
   const [size, setSize] = useState("");
+  const [color, setColor] = useState("");
   const [qty, setQty] = useState(1);
   const [zoom, setZoom] = useState(false);
   const [missing, setMissing] = useState(false);
@@ -20,12 +22,14 @@ export default function Product() {
     setD(null);
     setImg(0);
     setSize("");
+    setColor("");
     setQty(1);
     setMissing(false);
     api
       .get("/products/" + slug)
       .then((r) => {
         setD(r.data);
+        setColor(r.data.product.colors?.[0] || "");
         document.title = r.data.product.name + " | MonoFit";
       })
       .catch(() => setMissing(true));
@@ -44,10 +48,12 @@ export default function Product() {
       </div>
     );
   const p = d.product;
+  const colors = p.colors?.filter(Boolean) || [];
   const sel = p.sizes.find((s) => s.size === size);
   const addIt = () => {
     if (!size) return toast.error("Select a size first");
-    add(p, size, qty);
+    if (colors.length && !color) return toast.error("Select a colour first");
+    add(p, size, qty, color);
     toast.success("Added to cart");
   };
   return (
@@ -106,6 +112,26 @@ export default function Product() {
           <p className="mt-6 text-sm text-neutral-700 whitespace-pre-line">
             {p.description}
           </p>
+          {colors.length > 0 && (
+            <div className="mt-6">
+              <div className="lbl">Colour <span className="font-normal text-neutral-500">{color ? `· ${color}` : "· Choose a colour"}</span></div>
+              <div className="flex flex-wrap gap-3" role="radiogroup" aria-label="Choose a colour">
+                {colors.map((option) => (
+                  <button
+                    key={option}
+                    type="button"
+                    role="radio"
+                    aria-checked={color === option}
+                    aria-label={`Select ${option}`}
+                    title={option}
+                    onClick={() => setColor(option)}
+                    className={`size-9 rounded-full border border-neutral-300 dark:border-neutral-600 ${color === option ? "ring-2 ring-black ring-offset-2 dark:ring-white dark:ring-offset-neutral-950" : ""}`}
+                    style={{ background: getSwatchColor(option) }}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
           <div className="mt-6">
             <div className="lbl">Size</div>
             <div className="flex flex-wrap gap-2">

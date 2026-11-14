@@ -18,12 +18,15 @@ export async function priceCart(rawItems, couponCode, userId) {
       throw httpError(400, `Size ${it.size} is not available for ${p.name}`);
     if (s.stock < it.qty)
       throw httpError(400, `Only ${s.stock} left of ${p.name} (${it.size})`);
+    if (it.color && !(p.colors || []).includes(String(it.color)))
+      throw httpError(400, `Colour ${it.color} is not available for ${p.name}`);
     items.push({
       product: p._id,
       name: p.name,
       sku: p.sku,
       image: p.images[0]?.url,
       size: it.size,
+      color: it.color ? String(it.color) : (p.colors || [])[0] || "",
       qty: it.qty,
       mrp: p.mrp,
       price: p.price,
@@ -124,6 +127,9 @@ export async function createOrder({
     couponCode,
     user._id,
   );
+  const paymentAmount = Math.round(Number(pricing.total) * 100);
+  if (method === "online" && (!Number.isSafeInteger(paymentAmount) || paymentAmount < 100))
+    throw httpError(400, "Payment amount must be at least 100 paise");
   await reserveStock(items);
   const order = await Order.create({
     orderNumber: orderNumber(),

@@ -27,8 +27,11 @@ export const adminOnly = (req, res, next) =>
     ? next()
     : res.status(403).json({ message: "Admin access required" });
 
+
 export const notFound = (req, res) =>
   res.status(404).json({ message: "Route not found" });
+
+
 export const errorHandler = (err, req, res, _next) => {
   if (err instanceof ZodError)
     return res
@@ -48,6 +51,7 @@ export const errorHandler = (err, req, res, _next) => {
           "Duplicate value: " + Object.keys(err.keyValue || {}).join(", "),
       });
   if (err.name === "CastError")
+    
     return res.status(400).json({ message: "Invalid id" });
   if (err.status) return res.status(err.status).json({ message: err.message });
   console.error(err.message);

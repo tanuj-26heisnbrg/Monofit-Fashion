@@ -303,7 +303,7 @@ function OrderAdmin() {
         {o.items.map((i, k) => (
           <div key={k} className="py-2 flex justify-between">
             <span>
-              {i.name} ({i.size}) × {i.qty}
+              {i.name} ({i.size}{i.color ? `, ${i.color}` : ""}) × {i.qty}
             </span>
             <span>{inr(i.price * i.qty)}</span>
           </div>
